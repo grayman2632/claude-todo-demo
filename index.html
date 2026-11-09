@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tasks — To-Do List</title>
+<style>
+  :root {
+    --bg: #f4f5fb;
+    --bg-accent: radial-gradient(1200px 600px at 10% -10%, #e3e7ff 0%, transparent 60%),
+                 radial-gradient(900px 500px at 100% 0%, #f3e4ff 0%, transparent 55%);
+    --card: #ffffff;
+    --text: #1d2033;
+    --muted: #7a7f99;
+    --border: #e6e8f2;
+    --primary: #5b5ef4;
+    --primary-hover: #4b4ee0;
+    --primary-soft: #eceeff;
+    --danger: #e5484d;
+    --success: #2fb67c;
+    --shadow: 0 10px 40px rgba(40, 45, 100, 0.10);
+    --radius: 16px;
+  }
+  [data-theme="dark"] {
+    --bg: #0f1120;
+    --bg-accent: radial-gradient(1200px 600px at 10% -10%, #1c2050 0%, transparent 60%),
+                 radial-gradient(900px 500px at 100% 0%, #2b1850 0%, transparent 55%);
+    --card: #181b30;
+    --text: #eceefa;
+    --muted: #8b90ad;
+    --border: #272b47;
+    --primary: #7c7fff;
+    --primary-hover: #9193ff;
+    --primary-soft: #23274a;
+    --shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    background-image: var(--bg-accent);
+    background-attachment: fixed;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 48px 16px;
+    transition: background .3s, color .3s;
+  }
+  .app { width: 100%; max-width: 620px; }
+  header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+  h1 { font-size: 2rem; font-weight: 750; letter-spacing: -0.02em; }
+  .date { color: var(--muted); font-size: .95rem; margin-top: 4px; }
+  .icon-btn {
+    background: var(--card); border: 1px solid var(--border); color: var(--text);
+    width: 42px; height: 42px; border-radius: 12px; cursor: pointer; font-size: 1.1rem;
+    display: grid; place-items: center; box-shadow: var(--shadow); transition: transform .15s;
+  }
+  .icon-btn:hover { transform: translateY(-1px); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+
+  .progress-wrap { padding: 18px 22px 0; }
+  .progress-meta { display: flex; justify-content: space-between; font-size: .85rem; color: var(--muted); margin-bottom: 8px; }
+  .bar { height: 8px; background: var(--primary-soft); border-radius: 99px; overflow: hidden; }
+  .bar > span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--primary), #a46bff); border-radius: 99px; transition: width .35s ease; }
+
+  form { display: flex; gap: 10px; padding: 18px 22px; flex-wrap: wrap; }
+  form input[type="text"] {
+    flex: 1 1 200px; padding: 13px 16px; font-size: 1rem; color: var(--text);
+    background: var(--bg); border: 1px solid var(--border); border-radius: 12px; outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  form input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
+  select {
+    padding: 0 12px; border-radius: 12px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font-size: .95rem; cursor: pointer; outline: none;
+  }
+  .btn-add {
+    padding: 0 22px; height: 46px; background: var(--primary); color: #fff; border: 0;
+    border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background .15s, transform .1s;
+  }
+  .btn-add:hover { background: var(--primary-hover); }
+  .btn-add:active { transform: scale(.97); }
+
+  .filters { display: flex; gap: 6px; padding: 0 22px 14px; }
+  .filter {
+    background: transparent; border: 0; color: var(--muted); font-size: .9rem; font-weight: 600;
+    padding: 7px 14px; border-radius: 99px; cursor: pointer; transition: all .15s;
+  }
+  .filter:hover { color: var(--text); }
+  .filter.active { background: var(--primary-soft); color: var(--primary); }
+
+  ul { list-style: none; border-top: 1px solid var(--border); }
+  li {
+    display: flex; align-items: center; gap: 14px; padding: 14px 22px;
+    border-bottom: 1px solid var(--border); animation: in .25s ease; transition: background .15s;
+  }
+  li:last-child { border-bottom: 0; }
+  li:hover { background: color-mix(in srgb, var(--primary-soft) 45%, transparent); }
+  @keyframes in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+  .check {
+    appearance: none; -webkit-appearance: none; flex: none; width: 24px; height: 24px; border-radius: 8px;
+    border: 2px solid var(--border); cursor: pointer; display: grid; place-items: center; transition: all .15s; background: var(--card);
+  }
+  .check:hover { border-color: var(--primary); }
+  .check:checked { background: var(--success); border-color: var(--success); }
+  .check:checked::after { content: "✓"; color: #fff; font-size: .85rem; font-weight: 700; }
+
+  .label { flex: 1; min-width: 0; font-size: 1rem; word-break: break-word; cursor: text; }
+  li.done .label { text-decoration: line-through; color: var(--muted); }
+  .edit-input { flex: 1; font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--primary); border-radius: 8px; padding: 6px 10px; outline: none; }
+
+  .tag { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 4px 9px; border-radius: 99px; flex: none; }
+  .tag.high { background: #ffe9ea; color: #c93a40; }
+  .tag.medium { background: #fff3dc; color: #b27408; }
+  .tag.low { background: #e2f6ee; color: #1e8f60; }
+  [data-theme="dark"] .tag.high { background: #3a1d24; color: #ff8b90; }
+  [data-theme="dark"] .tag.medium { background: #3a2f17; color: #f2b94d; }
+  [data-theme="dark"] .tag.low { background: #15332a; color: #5ed3a0; }
+
+  .del { background: none; border: 0; color: var(--muted); font-size: 1.1rem; cursor: pointer; opacity: 0; padding: 6px; border-radius: 8px; transition: all .15s; }
+  li:hover .del, .del:focus-visible { opacity: 1; }
+  .del:hover { color: var(--danger); background: #ffe9ea; }
+  @media (hover: none) { .del { opacity: 1; } }
+
+  .empty { text-align: center; padding: 44px 20px; color: var(--muted); }
+  .empty .big { font-size: 2.4rem; margin-bottom: 8px; }
+
+  footer { display: flex; justify-content: space-between; align-items: center; padding: 14px 22px; border-top: 1px solid var(--border); color: var(--muted); font-size: .9rem; }
+  .clear { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: .9rem; }
+  .clear:hover { color: var(--danger); }
+  .hint { text-align: center; color: var(--muted); font-size: .8rem; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>My Tasks</h1>
+      <div class="date" id="date"></div>
+    </div>
+    <button class="icon-btn" id="theme" aria-label="Toggle dark mode" title="Toggle theme">🌙</button>
+  </header>
+
+  <div class="card">
+    <div class="progress-wrap">
+      <div class="progress-meta"><span id="progress-text">0 of 0 completed</span><span id="progress-pct">0%</span></div>
+      <div class="bar"><span id="bar"></span></div>
+    </div>
+
+    <form id="form">
+      <input type="text" id="input" placeholder="What needs to be done?" maxlength="200" autocomplete="off" required>
+      <select id="priority" aria-label="Priority">
+        <option value="low">Low</option>
+        <option value="medium" selected>Medium</option>
+        <option value="high">High</option>
+      </select>
+      <button class="btn-add" type="submit">Add</button>
+    </form>
+
+    <div class="filters" id="filters">
+      <button class="filter active" data-filter="all">All</button>
+      <button class="filter" data-filter="active">Active</button>
+      <button class="filter" data-filter="done">Completed</button>
+    </div>
+
+    <ul id="list"></ul>
+
+    <footer>
+      <span id="left">0 items left</span>
+      <button class="clear" id="clear">Clear completed</button>
+    </footer>
+  </div>
+  <p class="hint">Double-click a task to edit · Press Enter to save · Esc to cancel</p>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const list = $('#list'), form = $('#form'), input = $('#input'), priority = $('#priority');
+  const STORE = 'todo.tasks.v1', THEME = 'todo.theme';
+
+  let tasks = [];
+  let filter = 'all';
+  try { tasks = JSON.parse(localStorage.getItem(STORE)) || []; } catch (e) { tasks = []; }
+
+  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(tasks)); } catch (e) {} };
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+  // Theme
+  const applyTheme = t => {
+    document.documentElement.setAttribute('data-theme', t);
+    $('#theme').textContent = t === 'dark' ? '☀️' : '🌙';
+  };
+  let savedTheme = null;
+  try { savedTheme = localStorage.getItem(THEME); } catch (e) {}
+  applyTheme(savedTheme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  $('#theme').addEventListener('click', () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    try { localStorage.setItem(THEME, next); } catch (e) {}
+  });
+
+  $('#date').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+
+  function render() {
+    const visible = tasks.filter(t => filter === 'all' ? true : filter === 'done' ? t.done : !t.done);
+    list.innerHTML = '';
+
+    if (!visible.length) {
+      const msgs = { all: ['📝', 'No tasks yet. Add your first one above.'], active: ['🎉', 'Nothing left to do!'], done: ['🕓', 'No completed tasks yet.'] };
+      const li = document.createElement('li');
+      li.className = 'empty'; li.style.display = 'block';
+      li.innerHTML = `<div class="big">${msgs[filter][0]}</div>${msgs[filter][1]}`;
+      list.appendChild(li);
+    }
+
+    visible.forEach(t => {
+      const li = document.createElement('li');
+      li.className = t.done ? 'done' : '';
+      li.dataset.id = t.id;
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.className = 'check'; cb.checked = t.done;
+      cb.setAttribute('aria-label', 'Mark complete');
+      cb.addEventListener('change', () => { t.done = cb.checked; save(); render(); });
+
+      const label = document.createElement('span');
+      label.className = 'label'; label.textContent = t.text;
+      label.addEventListener('dblclick', () => startEdit(t, li, label));
+
+      const tag = document.createElement('span');
+      tag.className = 'tag ' + t.priority; tag.textContent = t.priority;
+
+      const del = document.createElement('button');
+      del.className = 'del'; del.innerHTML = '✕'; del.setAttribute('aria-label', 'Delete task');
+      del.addEventListener('click', () => { tasks = tasks.filter(x => x.id !== t.id); save(); render(); });
+
+      li.append(cb, label, tag, del);
+      list.appendChild(li);
+    });
+
+    const total = tasks.length, done = tasks.filter(t => t.done).length;
+    const pct = total ? Math.round(done / total * 100) : 0;
+    $('#bar').style.width = pct + '%';
+    $('#progress-text').textContent = `${done} of ${total} completed`;
+    $('#progress-pct').textContent = pct + '%';
+    const left = total - done;
+    $('#left').textContent = `${left} item${left === 1 ? '' : 's'} left`;
+    $('#clear').style.visibility = done ? 'visible' : 'hidden';
+  }
+
+  function startEdit(t, li, label) {
+    const field = document.createElement('input');
+    field.className = 'edit-input'; field.value = t.text; field.maxLength = 200;
+    li.replaceChild(field, label);
+    field.focus(); field.select();
+    let finished = false;
+    const finish = commit => {
+      if (finished) return; finished = true;
+      const v = field.value.trim();
+      if (commit && v) { t.text = v; save(); }
+      render();
+    };
+    field.addEventListener('keydown', e => {
+      if (e.key === 'Enter') finish(true);
+      if (e.key === 'Escape') finish(false);
+    });
+    field.addEventListener('blur', () => finish(true));
+  }
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    tasks.unshift({ id: uid(), text, priority: priority.value, done: false });
+    input.value = '';
+    save(); render();
+    input.focus();
+  });
+
+  $('#filters').addEventListener('click', e => {
+    const b = e.target.closest('.filter');
+    if (!b) return;
+    filter = b.dataset.filter;
+    document.querySelectorAll('.filter').forEach(x => x.classList.toggle('active', x === b));
+    render();
+  });
+
+  $('#clear').addEventListener('click', () => { tasks = tasks.filter(t => !t.done); save(); render(); });
+
+  render();
+})();
+</script>
+</body>
+</html>
